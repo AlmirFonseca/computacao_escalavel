@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <thread>
 
 using namespace std;
 
@@ -9,7 +10,29 @@ int NUM_THREADS = 196391/2;
 //char * TEXT_FILE_PATH = "./shakespeare.txt";
 
 string line;
+const string LOVE = "love";
+const string HATE = "hate";
+
 int lineCount;
+
+int count_word_per_memory_block(const string& line, const string& word) {
+    int total = 0;
+
+    // count how many times the word appears in the main
+    size_t pos = line.find(word, 0);
+    while (pos != string::npos) {
+        total++;
+        pos = line.find(word, pos + 1);
+    }
+
+    return total;
+}
+
+// function that returns a pair of integers that represent the number of times the word "love" and "hate" appear in the text
+void count_word(const string& line, int& loveCount, int& hateCount) {
+    loveCount = count_word_per_memory_block(line, LOVE);
+    hateCount = count_word_per_memory_block(line, HATE);
+}
 
 int main() {
 
@@ -57,6 +80,27 @@ int main() {
         cout << i << ": " << memoryBlocks[i] << endl;
     }
 
+    thread* threads = new thread[NUM_THREADS];
+
+    int countLove[NUM_THREADS];
+    int countHate[NUM_THREADS];
+
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threads[i] = thread(count_word, memoryBlocks[i], ref(countLove[i]), ref(countHate[i]));
+    }
+
+    int totalLoveCount = 0;
+    int totalHateCount = 0;
+
+    // join the threads
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threads[i].join();
+        totalLoveCount += countLove[i];
+        totalHateCount += countHate[i];
+    }
+
+    cout << "The word 'love' appears " << totalLoveCount << " times in the text." << endl;
+    cout << "The word 'hate' appears " << totalHateCount << " times in the text." << endl;
 
     return 0;
 }
