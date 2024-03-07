@@ -3,11 +3,12 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <chrono>
 
 using namespace std;
 
 // Number of threads to use
-int NUM_THREADS = 10;
+int NUM_THREADS = 16;
 
 string TEXT_FILE_PATH = "./shakespeare.txt"; // Path to the text file
 const string LOVE = "love"; 
@@ -34,6 +35,9 @@ void count_word(const string& line, int& loveCount, int& hateCount) {
 }
 
 int main() {
+
+    // Measure pre-processing time
+    auto start = chrono::high_resolution_clock::now();
 
     ifstream textFile (TEXT_FILE_PATH);
 
@@ -75,6 +79,16 @@ int main() {
         memoryBlocks.push_back(memoryBlock);
     }
 
+    textFile.close();
+
+    // Finish pre-processing time
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> preProcessingTime = end - start;
+
+
+    // Measure processing time
+    start = chrono::high_resolution_clock::now();
+
     thread* threads = new thread[NUM_THREADS];
 
     int countLove[NUM_THREADS];
@@ -94,12 +108,24 @@ int main() {
         totalHateCount += countHate[i];
     }
 
-    cout << endl << "Number of threads: " << NUM_THREADS << endl;
-    cout << "Number of lines of each thread (remaining are distributed to the firt ones): " << linesPerThread << endl << endl;
+    // Finish processing time
+    end = chrono::high_resolution_clock::now();
+    chrono::duration<double> processingTime = end - start;
 
-    cout << "The word 'love' appears " << totalLoveCount << " times in the text." << endl;
-    cout << "The word 'hate' appears " << totalHateCount << " times in the text." << endl;
-    cout << "The word that appears the most is: " << (totalLoveCount > totalHateCount ? "love" : "hate") << endl << endl;
+
+    // Threads information
+    cout << endl << "Número de threads: " << NUM_THREADS << endl;
+    cout << "Número de linhas por thread (as restantes são distribuídas pelas primeiras threads): " << linesPerThread << endl << endl;
+
+    // Time information
+    cout << "Tempo de preparação: " << preProcessingTime.count() << " s" << endl;
+    cout << "Tempo de execução da pesquisa: " << processingTime.count() << " s" << endl;
+    cout << "Tempo total decorrido: " << preProcessingTime.count() + processingTime.count() << " s" << endl << endl;
+
+    // Results
+    cout << "A palavra 'love' aparece " << totalLoveCount << " vezes no texto." << endl;
+    cout << "A palavra 'hate' aparece " << totalHateCount << " vezes no texto." << endl;
+    cout << "A palavra que aparece mais vezes é: " << (totalLoveCount > totalHateCount ? "love" : "hate") << endl << endl;
 
     return 0;
 }
