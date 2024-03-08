@@ -133,9 +133,9 @@ int main(int argc, char* argv[]) {
     cout << "Tamanho de bloco de cada thread = Numero de linhas por thread (as linhas restantes sao distribuidas pelas primeiras threads): " << linesPerThread << endl;
 
     // Time information
-    cout << "Tempo de preparacao: " << preProcessingTime.count() << " s" << endl;
-    cout << "Tempo de execucao da pesquisa: " << processingTime.count() << " s" << endl;
-    cout << "Tempo total decorrido: " << preProcessingTime.count() + processingTime.count() << " s" << endl;
+    cout << "Tempo de preparacao (s): " << preProcessingTime.count() << endl;
+    cout << "Tempo de execucao da pesquisa (s): " << processingTime.count() << endl;
+    cout << "Tempo total decorrido (s): " << preProcessingTime.count() + processingTime.count() <<  endl;
 
     // Results
     cout << "Quantidade de ocorrencias de 'love': " << totalLoveCount << endl;
