@@ -4,6 +4,8 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <algorithm>
+#include <cctype>
 
 using namespace std;
 
@@ -13,20 +15,34 @@ int NUM_THREADS = 100;
 string TEXT_FILE_PATH = "./shakespeare.txt"; // Path to the text file
 const string LOVE = "love"; 
 const string HATE = "hate";
+
 string line; // String to hold each line of the text file
+
 
 int count_word_per_memory_block(const string& memoryBlock, const string& word) {
     int total = 0;
 
-    // count how many times the word appears in the main
-    size_t pos = memoryBlock.find(word, 0);
+    size_t pos = memoryBlock.find(word);
+
     while (pos != string::npos) {
-        total++;
+        bool is_valid_start = (pos == 0) || !isalpha(memoryBlock[pos - 1]);
+
+        bool is_valid_end = (pos + word.length() == memoryBlock.length()) || !isalpha(memoryBlock[pos + word.length()]);
+
+        if (is_valid_start && is_valid_end) {
+            total++;
+        }
+
         pos = memoryBlock.find(word, pos + 1);
     }
 
     return total;
 }
+
+bool isalpha(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
 
 // function that returns a pair of integers that represent the number of times the word "love" and "hate" appear in the text
 void count_word(const string& memoryBlock, int& loveCount, int& hateCount) {
