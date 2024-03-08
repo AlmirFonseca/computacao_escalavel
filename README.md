@@ -6,3 +6,14 @@ As the code is an original Google Colab notebook with the C++ code implemented w
 2. as a second option, you can run all the jupyter notebook locally - but you have to have internet connection so the code can automatically download shakespeare.txt the text available on [this URL](https://www.gutenberg.org/cache/epub/100/pg100.txt)
    1. If you choose this option, use Visual Studio Code to run all, making sure you have choose python 3.11 as kernel.
    2. Or, if you have it installed, use Jupyter Notebook app to run all
+
+
+Alternatively, you can execute just the C++ code by copying the cell content into a main.cpp file and then compiling as:
+
+``g++ -o main main.cpp ``
+
+and running as:
+
+``.\main.exe <NUMBER_THREADS>``
+
+where NUMBER_THREADS is an argument corresponding to the number of threads you want (default = 1)
