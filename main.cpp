@@ -3,17 +3,17 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <chrono>
 
 using namespace std;
 
-int NUM_THREADS = 196391/2;
-//char * TEXT_FILE_PATH = "./shakespeare.txt";
+// Number of threads to use
+int NUM_THREADS = 16;
 
-string line;
-const string LOVE = "love";
+string TEXT_FILE_PATH = "./shakespeare.txt"; // Path to the text file
+const string LOVE = "love"; 
 const string HATE = "hate";
-
-int lineCount;
+string line; // String to hold each line of the text file
 
 int count_word_per_memory_block(const string& line, const string& word) {
     int total = 0;
@@ -36,13 +36,16 @@ void count_word(const string& line, int& loveCount, int& hateCount) {
 
 int main() {
 
-    ifstream textFile ("shakespeare.txt");
+    // Measure pre-processing time
+    auto start = chrono::high_resolution_clock::now();
+
+    ifstream textFile (TEXT_FILE_PATH);
+
+    int lineCount;
 
     while (getline(textFile, line)) {
         lineCount++;
     }
-
-    cout << lineCount << endl;
 
     int linesPerThread = lineCount / NUM_THREADS;
     int remainingLines = lineCount % NUM_THREADS;
@@ -76,9 +79,15 @@ int main() {
         memoryBlocks.push_back(memoryBlock);
     }
 
-    for (int i=0; i < 20; i++){
-        cout << i << ": " << memoryBlocks[i] << endl;
-    }
+    textFile.close();
+
+    // Finish pre-processing time
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> preProcessingTime = end - start;
+
+
+    // Measure processing time
+    start = chrono::high_resolution_clock::now();
 
     thread* threads = new thread[NUM_THREADS];
 
@@ -99,8 +108,24 @@ int main() {
         totalHateCount += countHate[i];
     }
 
-    cout << "The word 'love' appears " << totalLoveCount << " times in the text." << endl;
-    cout << "The word 'hate' appears " << totalHateCount << " times in the text." << endl;
+    // Finish processing time
+    end = chrono::high_resolution_clock::now();
+    chrono::duration<double> processingTime = end - start;
+
+
+    // Threads information
+    cout << endl << "Número de threads: " << NUM_THREADS << endl;
+    cout << "Número de linhas por thread (as restantes são distribuídas pelas primeiras threads): " << linesPerThread << endl << endl;
+
+    // Time information
+    cout << "Tempo de preparação: " << preProcessingTime.count() << " s" << endl;
+    cout << "Tempo de execução da pesquisa: " << processingTime.count() << " s" << endl;
+    cout << "Tempo total decorrido: " << preProcessingTime.count() + processingTime.count() << " s" << endl << endl;
+
+    // Results
+    cout << "A palavra 'love' aparece " << totalLoveCount << " vezes no texto." << endl;
+    cout << "A palavra 'hate' aparece " << totalHateCount << " vezes no texto." << endl;
+    cout << "A palavra que aparece mais vezes é: " << (totalLoveCount > totalHateCount ? "love" : "hate") << endl << endl;
 
     return 0;
 }
