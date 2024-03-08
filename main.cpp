@@ -4,13 +4,9 @@
 #include <vector>
 #include <thread>
 #include <chrono>
-#include <algorithm>
-#include <cctype>
 
 using namespace std;
 
-// Number of threads to use
-int NUM_THREADS = 100;
 
 string TEXT_FILE_PATH = "./shakespeare.txt"; // Path to the text file
 const string LOVE = "love"; 
@@ -50,8 +46,9 @@ void count_word(const string& memoryBlock, int& loveCount, int& hateCount) {
     hateCount = count_word_per_memory_block(memoryBlock, HATE);
 }
 
-int main() {
-
+int main(int argc, char* argv[]) {
+    
+    const int NUM_THREADS = argc < 2 ? 1 : atoi(argv[1]);
     // Measure pre-processing time
     auto start = chrono::high_resolution_clock::now();
 
@@ -132,19 +129,18 @@ int main() {
 
 
     // Threads information
-    cout << endl << "Numero de threads: " << NUM_THREADS << endl;
-    cout << "Tamanho de bloco de cada thread = Numero de linhas por thread \n "
-            "(as linhas restantes sao distribuidas pelas primeiras threads): " << linesPerThread << endl << endl;
+    cout << "Numero de threads: " << NUM_THREADS << endl;
+    cout << "Tamanho de bloco de cada thread = Numero de linhas por thread (as linhas restantes sao distribuidas pelas primeiras threads): " << linesPerThread << endl;
 
     // Time information
     cout << "Tempo de preparacao: " << preProcessingTime.count() << " s" << endl;
     cout << "Tempo de execucao da pesquisa: " << processingTime.count() << " s" << endl;
-    cout << "Tempo total decorrido: " << preProcessingTime.count() + processingTime.count() << " s" << endl << endl;
+    cout << "Tempo total decorrido: " << preProcessingTime.count() + processingTime.count() << " s" << endl;
 
     // Results
-    cout << "A palavra 'love' aparece " << totalLoveCount << " vezes no texto." << endl;
-    cout << "A palavra 'hate' aparece " << totalHateCount << " vezes no texto." << endl;
-    cout << "A palavra que aparece mais vezes eh: " << (totalLoveCount > totalHateCount ? "love" : "hate") << endl << endl;
+    cout << "Quantidade de ocorrencias de 'love': " << totalLoveCount << endl;
+    cout << "Quantidade de ocorrencias de 'hate': " << totalHateCount << endl;
+    cout << "A palavra que aparece mais vezes eh: " << (totalLoveCount > totalHateCount ? "love" : "hate") << endl;
 
     return 0;
 }
