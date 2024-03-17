@@ -16,8 +16,8 @@ int iNumPrime = 0;
 
 int main() {
 
-    unsigned int N = 107; // Range to evaluate (1 to N)
-    unsigned int M = 10; // Number of threads
+    unsigned int N = 1e3; // Range to evaluate (1 to N)
+    unsigned int M = 7; // Number of threads
 
     // Create the elements and threadSize arrays
     unsigned int elements[N] = {0}; // Array to store the numbers to evaluate (from 1 to N, by default)
@@ -61,7 +61,7 @@ int main() {
         }
         
         // Print the sets
-        printSets(N, M, elements, threadSize);
+        printSets(N, M, elements, threadSize, true);
 
         cout << "\n\n" << endl;
 
@@ -76,21 +76,24 @@ int main() {
     }
 
     // Use equalSplit to evaluate the number of elements per thread
-    equalSplit(N, M, elements, threadSize);
+    cardDistribution(N, M, elements, threadSize);
 
     // Give work to each thread
-    giveThreadsWork(N, M, elements, threadSize, isPrime);
+    giveThreadsWork(N, M, elements, threadSize, isPrime, 'r');
 
-    // Print results
+    // Print the prime numbers
     for (unsigned int i = 0; i < N; i++) {
-        cout << elements[i] << " is prime: " << isPrime[i] << endl;
+        if (isPrime[i]) {
+            cout << i + 1 << " is prime" << endl;
+            iNumPrime++;
+        }
     }
 
     cout << "\nThere are " << iNumPrime << " prime numbers" << endl;
-
 
     return 0;
 }
 
 // The line to compile and exec
 // g++ -std=c++11 main.cpp -o main; ./main 
+
