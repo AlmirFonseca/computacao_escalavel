@@ -1,32 +1,80 @@
 #include <iostream>
 #include <vector>
+#include <cmath>
+#include <chrono>
+#include <numeric>
 #include <random>
 #include <algorithm>
 
+#include "prime.hpp"
+#include "setDistribution.hpp"
+#include "utils.hpp"
+
 using namespace std;
 
-int main(int argc, char* argv[]) {
+int main() {
 
-    const int NUM_MAX = argc < 2 ? 1 : atoi(argv[1]);
+    unsigned int N = 123; // Range to evaluate (1 to N)
+    unsigned int M = 10; // Number of threads
 
-    vector<int> indices(NUM_MAX);
-    for (int i = 0; i < NUM_MAX; ++i) {
-        indices[i] = i;
+    // Create the elements and threadSize arrays
+    unsigned int elements[N] = {0}; // Array to store the numbers to evaluate (from 1 to N, by default)
+    unsigned int threadSize[N] = {0}; // Array to store the thread size (number of elements to evaluate in each thread)
+    bool isPrime[N] = {false}; // Array to store the prime numbers
+
+    // Fill the elements array
+    for (unsigned int i = 0; i < N; i++) {
+        elements[i] = i + 1;
     }
 
-    random_device rd;
-    mt19937 g(rd()); // Mersenne Twister engine for good randomness
+    int approach = 1;
 
-    shuffle(indices.begin(), indices.end(), g);
+    for (int approach = 1; approach <= 5; approach++) {
 
-    vector<bool> shuffled_numbers(NUM_MAX);
-    for (int i = 0; i < NUM_MAX; ++i) {
-        shuffled_numbers[i] = false;
-    }
+        cout << "Approach " << approach << endl;
 
-    for (int i = 0; i < NUM_MAX; ++i) {
-        cout << "index (N-1): " << indices[i] << ": " << shuffled_numbers[indices[i]] << endl;
+        switch (approach) {
+            case 1: // Split in equal parts, without balance
+                equalSplit(N, M, elements, threadSize);
+                break;
+
+            case 2: // Shuffle and split in equal parts
+                shuffleAndSplit(N, M, elements, threadSize);
+                break;
+
+            case 3: // "Card distribution" approach (round-robin with remaining elements)
+                cardDistribution(N, M, elements, threadSize);
+                break;
+
+            case 4: // Split and shuffle
+                /* code */
+                break;
+
+            case 5: // Workload estimation
+                workloadBalance(N, M, elements, threadSize);
+                break;
+            
+            default:
+                break;
+        }
+        
+        // Print the sets
+        printSets(N, M, elements, threadSize);
+
+        cout << "\n\n" << endl;
+
+        // Restart the elements and threadSize arrays
+        for (unsigned int i = 0; i < N; i++) {
+            elements[i] = i + 1;
+        }
+
+        for (unsigned int i = 0; i < M; i++) {
+            threadSize[i] = 0;
+        }
     }
 
     return 0;
 }
+
+// The line to compile and exec
+// g++ -std=c++11 main.cpp prime.hpp setDistribution.hpp utils.hpp -o main; ./main
