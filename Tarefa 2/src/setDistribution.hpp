@@ -55,6 +55,51 @@ void cardDistribution(unsigned int N, unsigned int M, unsigned int* elements, un
     }
 }
 
+void splitAndShuffle(unsigned int N, unsigned int M, unsigned int* elements, unsigned int* threadSize) {
+
+    // Divide the orderedElements array into parts of size M and shuffle each part
+    unsigned int elementsPerThread = N / M;
+    unsigned int remainingElements = N % M;
+
+    // Adjust the threadSize array for the remaining elements, if any
+    for (unsigned int i = 0; i < M; i++) {
+        threadSize[i] = elementsPerThread + (i < remainingElements ? 1 : 0);
+    }
+
+    // Generate a new array with the ordered elements
+    unsigned int orderedElements[N] = {0};
+    for (unsigned int i = 0; i < N; i++) {
+        orderedElements[i] = i + 1;
+    }
+    // Shuffle each block of size M
+    random_device rd;
+    mt19937 g(rd()); // Mersenne Twister engine for good randomness
+
+    for (unsigned int i = 0; i < elementsPerThread; i++) {
+        shuffle(orderedElements + i * M, orderedElements + (i + 1) * M, g);
+    }
+
+    // Shuffle the remaining elements
+    shuffle(orderedElements + elementsPerThread * M, orderedElements + elementsPerThread * M + remainingElements, g);
+
+    unsigned int currentThreadIndex = 0;
+    unsigned int currentThreadOffsets[M] = {0};
+
+    // Fill the currentThreadOffsets with the start index based on the threadSize
+    for (unsigned int i = 1; i < M; i++) {
+        currentThreadOffsets[i] = currentThreadOffsets[i - 1] + threadSize[i - 1];
+    }
+
+    // Assign the shuffled elements to the elements array
+    // Each threadSize will contain one element of each block of size M
+    // The remaining elements will be assigned to the first threads
+    for (unsigned int i = 0; i < M; i++) {
+        for (unsigned int j = 0; j < threadSize[i]; j++) {
+            elements[currentThreadOffsets[i] + j] = orderedElements[i + j * M];
+        }
+    }
+}
+
 void workloadBalance(unsigned int N, unsigned int M, unsigned int* elements, unsigned int* threadSize) {
 
     // Calculate the workload for each element and the total workload using squares
