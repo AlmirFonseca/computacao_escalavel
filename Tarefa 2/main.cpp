@@ -5,6 +5,7 @@
 #include <numeric>
 #include <random>
 #include <algorithm>
+#include <fstream>
 
 #include "src/prime.hpp"
 #include "src/setDistribution.hpp"
@@ -16,7 +17,7 @@ int iNumPrime = 0;
 
 int main() {
 
-    unsigned int N = 1e3; // Range to evaluate (1 to N)
+    unsigned int N = 1e2; // Range to evaluate (1 to N)
     unsigned int M = 7; // Number of threads
 
     // Create the elements and threadSize arrays
@@ -84,12 +85,30 @@ int main() {
     // Print the prime numbers
     for (unsigned int i = 0; i < N; i++) {
         if (isPrime[i]) {
-            cout << i + 1 << " is prime" << endl;
             iNumPrime++;
         }
     }
 
-    cout << "\nThere are " << iNumPrime << " prime numbers" << endl;
+
+    cout << "Threads: " << M << endl;
+    cout << "Total execution time: " << 0 << endl;
+    cout << "Total numbers evaluated: " << N <<endl;
+    cout << "Quantity of primes found: " << iNumPrime << endl;
+
+    ofstream outputFile("results.txt");
+
+    if (outputFile.is_open()) {
+        
+        outputFile << "Primes: ";
+        for (unsigned int i = 0; i < N; i++) {
+            if(isPrime[i] == 1) outputFile << elements[i] << "; ";
+        }
+        cout << endl;
+        outputFile.close();
+    } else {
+        cerr << "Error opening results.txt" << endl;
+    }
+
 
     return 0;
 }
