@@ -21,7 +21,7 @@ bool is_prime_it(int n, int& operations) {
 }
 
 // function that checks if a number is prime (recursively)
-bool is_prime_re(int n, int i, int& operations) {
+bool is_prime_re(int n, int& operations, int i = 2) {
     if (n <= 1) {
         return false;
     }
@@ -35,5 +35,5 @@ bool is_prime_re(int n, int i, int& operations) {
         return false;
     }
 
-    return is_prime_re(n, i + 1, operations);
+    return is_prime_re(n, operations, i + 1);
 }
