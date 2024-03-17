@@ -12,6 +12,8 @@
 
 using namespace std;
 
+int iNumPrime = 0;
+
 int main() {
 
     unsigned int N = 107; // Range to evaluate (1 to N)
@@ -83,6 +85,8 @@ int main() {
     for (unsigned int i = 0; i < N; i++) {
         cout << elements[i] << " is prime: " << isPrime[i] << endl;
     }
+
+    cout << "\nThere are " << iNumPrime << " prime numbers" << endl;
 
 
     return 0;
