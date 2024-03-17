@@ -81,13 +81,10 @@ int main() {
     // Give work to each thread
     giveThreadsWork(N, M, elements, threadSize, isPrime, 'r');
 
-    // Print results
-    // for (unsigned int i = 0; i < N; i++) {
-    //     cout << elements[i] << " is prime: " << isPrime[i] << endl;
-    // }
-
+    // Print the prime numbers
     for (unsigned int i = 0; i < N; i++) {
         if (isPrime[i]) {
+            cout << i + 1 << " is prime" << endl;
             iNumPrime++;
         }
     }
