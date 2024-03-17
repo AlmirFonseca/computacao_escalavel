@@ -14,7 +14,7 @@ using namespace std;
 
 int main() {
 
-    unsigned int N = 123; // Range to evaluate (1 to N)
+    unsigned int N = 107; // Range to evaluate (1 to N)
     unsigned int M = 10; // Number of threads
 
     // Create the elements and threadSize arrays
@@ -47,7 +47,7 @@ int main() {
                 break;
 
             case 4: // Split and shuffle
-                /* code */
+                splitAndShuffle(N, M, elements, threadSize);
                 break;
 
             case 5: // Workload estimation
