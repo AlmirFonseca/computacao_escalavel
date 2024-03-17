@@ -12,10 +12,12 @@
 
 using namespace std;
 
+int iNumPrime = 0;
+
 int main() {
 
-    unsigned int N = 1e5; // Range to evaluate (1 to N)
-    unsigned int M = 5; // Number of threads
+    unsigned int N = 1e3; // Range to evaluate (1 to N)
+    unsigned int M = 7; // Number of threads
 
     // Create the elements and threadSize arrays
     unsigned int elements[N] = {0}; // Array to store the numbers to evaluate (from 1 to N, by default)
@@ -47,7 +49,7 @@ int main() {
                 break;
 
             case 4: // Split and shuffle
-                /* code */
+                splitAndShuffle(N, M, elements, threadSize);
                 break;
 
             case 5: // Workload estimation
@@ -59,7 +61,7 @@ int main() {
         }
         
         // Print the sets
-        printSets(N, M, elements, threadSize, false);
+        printSets(N, M, elements, threadSize, true);
 
         cout << "\n\n" << endl;
 
@@ -83,6 +85,14 @@ int main() {
     // for (unsigned int i = 0; i < N; i++) {
     //     cout << elements[i] << " is prime: " << isPrime[i] << endl;
     // }
+
+    for (unsigned int i = 0; i < N; i++) {
+        if (isPrime[i]) {
+            iNumPrime++;
+        }
+    }
+
+    cout << "\nThere are " << iNumPrime << " prime numbers" << endl;
 
     return 0;
 }
