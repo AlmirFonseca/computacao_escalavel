@@ -6,8 +6,12 @@
 #include <random>
 #include <algorithm>
 #include <thread>
+#include <mutex>
 
 using namespace std;
+
+extern int iNumPrime;
+mutex mtx;
 
 void printSets(unsigned int N, unsigned int M, unsigned int elements[], unsigned int threadSize[], bool printElements=true) {
     
@@ -25,6 +29,12 @@ void printSets(unsigned int N, unsigned int M, unsigned int elements[], unsigned
     }
 }
 
+void updateCounter()
+{
+    mtx.lock();
+    iNumPrime++;
+    mtx.unlock();
+}
 
 void executeApproach(unsigned int N, unsigned int M, unsigned int elements[], unsigned int threadSize[], int idxThread, bool isPrime[], char aproach) {
     // Calculate the start and end index for the current thread
@@ -45,6 +55,7 @@ void executeApproach(unsigned int N, unsigned int M, unsigned int elements[], un
         else if (aproach == 'r') {
             isPrime[i] = is_prime_re(elements[i], operations);
         }
+        if (isPrime[i]) updateCounter();
     }
 }
 
