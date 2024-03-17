@@ -73,6 +73,18 @@ int main() {
         }
     }
 
+    // Use equalSplit to evaluate the number of elements per thread
+    equalSplit(N, M, elements, threadSize);
+
+    // Give work to each thread
+    giveThreadsWork(N, M, elements, threadSize, isPrime);
+
+    // Print results
+    for (unsigned int i = 0; i < N; i++) {
+        cout << elements[i] << " is prime: " << isPrime[i] << endl;
+    }
+
+
     return 0;
 }
 
