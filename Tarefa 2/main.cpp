@@ -5,6 +5,7 @@
 #include <numeric>
 #include <random>
 #include <algorithm>
+#include <fstream>
 
 #include "src/prime.hpp"
 #include "src/setDistribution.hpp"
@@ -115,6 +116,8 @@ void CSV_maker() {
 }
 
 int main() {
+
+    const int NUMTHREADS = 7;
     long long N = pow(10, 2); // Range to evaluate (1 to N)
 
     // Create the elements and threadSize arrays
@@ -127,30 +130,44 @@ int main() {
         elements[i] = i + 1;
     }
 
-    // Uses the "card distribution" approach to split the elements in 7 threads
-    cardDistribution(N, 7, elements, threadSize);
+    // Uses the "card distribution" approach to split the elements in 7 (=NUMTHREADS) threads
+    cardDistribution(N, NUMTHREADS, elements, threadSize);
 
     // Print elements of each thread
-    printSets(N, 7, elements, threadSize);
+    printSets(N, NUMTHREADS, elements, threadSize);
 
     // Execute the approach with the iterative method
     char method = 'i';
-    double durationPerThread[7] = {0}; // Array to store the duration of each thread
-    double duration = giveThreadsWork(N, 7, elements, threadSize, isPrime, method, durationPerThread);
+    double durationPerThread[NUMTHREADS] = {0}; // Array to store the duration of each thread
+    double duration = giveThreadsWork(N, NUMTHREADS, elements, threadSize, isPrime, method, durationPerThread);
 
     // Print the duration of each thread
-    for (long long i = 0; i < 7; i++) {
+    for (long long i = 0; i < NUMTHREADS; i++) {
         cout << "Thread " << i + 1 << " duration: " << durationPerThread[i] << " ns" << endl;
     }
 
-    // Print the number of prime numbers
-    cout << "\nThere are " << iNumPrime << " prime numbers" << endl;  
-
-    // Print the total duration
-    cout << "Total duration: " << duration << " ns" << endl;
-    
-
     // CSV_maker();
+
+    cout << endl;
+    cout << "Threads: " << NUMTHREADS << endl;
+    cout << "Total execution time (ns): " << duration << endl;
+    cout << "Total numbers evaluated: " << N <<endl;
+    cout << "Quantity of primes found: " << iNumPrime << endl;
+
+    ofstream outputFile("results.txt");
+
+    if (outputFile.is_open()) {
+
+        outputFile << "Primes: ";
+        for (unsigned int i = 0; i < N; i++) {
+            if(isPrime[i] == 1) outputFile << elements[i] << "; ";
+        }
+        cout << endl;
+        outputFile.close();
+    } else {
+        cerr << "Error opening results.txt" << endl;
+    }
+
 
     return 0;
 }
