@@ -5,7 +5,6 @@
 #include <numeric>
 #include <random>
 #include <algorithm>
-#include <fstream>
 
 #include "src/prime.hpp"
 #include "src/setDistribution.hpp"
@@ -13,94 +12,106 @@
 
 using namespace std;
 
+#define OVERSAMPLING_FACTOR 3
+
 int iNumPrime = 0;
 
 int main() {
 
-    unsigned int N = 1e2; // Range to evaluate (1 to N)
     unsigned int M = 7; // Number of threads
 
-    // Create the elements and threadSize arrays
-    unsigned int elements[N] = {0}; // Array to store the numbers to evaluate (from 1 to N, by default)
-    unsigned int threadSize[N] = {0}; // Array to store the thread size (number of elements to evaluate in each thread)
-    bool isPrime[N] = {false}; // Array to store the prime numbers
+    char methods[2] = {'r', 'i'}; // Methods to evaluate (r for recursive, i for iterative)
 
-    // Fill the elements array
-    for (unsigned int i = 0; i < N; i++) {
-        elements[i] = i + 1;
-    }
+    // Create the CSV file
+    createCSV(M);
 
-    int approach = 1;
+    // Iterate over the methods (recursive and iterative)
+    for (char method : methods) {
 
-    for (int approach = 1; approach <= 5; approach++) {
+        cout << "Method " << method << endl;
 
-        cout << "Approach " << approach << endl;
-
-        switch (approach) {
-            case 1: // Split in equal parts, without balance
-                equalSplit(N, M, elements, threadSize);
-                break;
-
-            case 2: // Shuffle and split in equal parts
-                shuffleAndSplit(N, M, elements, threadSize);
-                break;
-
-            case 3: // "Card distribution" approach (round-robin with remaining elements)
-                cardDistribution(N, M, elements, threadSize);
-                break;
-
-            case 4: // Split and shuffle
-                splitAndShuffle(N, M, elements, threadSize);
-                break;
-
-            case 5: // Workload estimation
-                workloadBalance(N, M, elements, threadSize);
-                break;
+        // Iterate over the range to evaluate (10^i, i = 1, 2, ...)
+        for (int k = 1; k < 3; k++) {
             
-            default:
-                break;
-        }
-        
-        // Print the sets
-        printSets(N, M, elements, threadSize, true);
+            unsigned int N = 10^k; // Range to evaluate (1 to N)
 
-        cout << "\n\n" << endl;
+            // Create the elements and threadSize arrays
+            unsigned int elements[N] = {0}; // Array to store the numbers to evaluate (from 1 to N, by default)
+            unsigned int threadSize[N] = {0}; // Array to store the thread size (number of elements to evaluate in each thread)
+            bool isPrime[N] = {false}; // Array to store the prime numbers
 
-        // Restart the elements and threadSize arrays
-        for (unsigned int i = 0; i < N; i++) {
-            elements[i] = i + 1;
-        }
+            // Fill the elements array
+            for (unsigned int i = 0; i < N; i++) {
+                elements[i] = i + 1;
+            }
 
-        for (unsigned int i = 0; i < M; i++) {
-            threadSize[i] = 0;
+            // Iterate over the indexing approaches
+            for (int approach = 1; approach <= 5; approach++) {
+
+                cout << "Approach " << approach << endl;
+
+                switch (approach) {
+                    case 1: // Split in equal parts, without balance
+                        equalSplit(N, M, elements, threadSize);
+                        break;
+
+                    case 2: // Shuffle and split in equal parts
+                        shuffleAndSplit(N, M, elements, threadSize);
+                        break;
+
+                    case 3: // "Card distribution" approach (round-robin with remaining elements)
+                        cardDistribution(N, M, elements, threadSize);
+                        break;
+
+                    case 4: // Split and shuffle
+                        splitAndShuffle(N, M, elements, threadSize);
+                        break;
+
+                    case 5: // Workload estimation
+                        workloadBalance(N, M, elements, threadSize);
+                        break;
+                    
+                    default:
+                        break;
+                }
+                
+                // Print the sets
+                // printSets(N, M, elements, threadSize, false);
+
+                // cout << "\n\n" << endl;
+
+                // Iterate over the oversampling factor
+                for (unsigned int i = 1; i <= OVERSAMPLING_FACTOR; i++) {
+
+                    cout << "Oversampling factor " << i << endl;
+
+                    // Give work to each thread
+                    giveThreadsWork(N, M, elements, threadSize, isPrime, method);
+
+                    // Print the prime numbers
+                    for (unsigned int i = 0; i < N; i++) {
+                        if (isPrime[i]) {
+                            cout << i + 1 << " is prime" << endl;
+                            iNumPrime++;
+                        }
+                    }
+
+                    cout << "\nThere are " << iNumPrime << " prime numbers" << endl;
+
+                    appendCSV(N, M, elements, threadSize, isPrime, 0, method, 0);
+
+                    // Restart the elements and threadSize arrays
+                    for (unsigned int i = 0; i < N; i++) {
+                        elements[i] = i + 1;
+                    }
+
+                    for (unsigned int i = 0; i < M; i++) {
+                        threadSize[i] = 0;
+                    }
+                }
+            }
         }
     }
-
-    // Use equalSplit to evaluate the number of elements per thread
-    cardDistribution(N, M, elements, threadSize);
-
-    // Give work to each thread
-    giveThreadsWork(N, M, elements, threadSize, isPrime, 'r');
-
-    cout << "Threads: " << M << endl;
-    cout << "Total execution time: " << 0 << endl;
-    cout << "Total numbers evaluated: " << N <<endl;
-    cout << "Quantity of primes found: " << iNumPrime << endl;
-
-    ofstream outputFile("results.txt");
-
-    if (outputFile.is_open()) {
-        
-        outputFile << "Primes: ";
-        for (unsigned int i = 0; i < N; i++) {
-            if(isPrime[i] == 1) outputFile << elements[i] << "; ";
-        }
-        cout << endl;
-        outputFile.close();
-    } else {
-        cerr << "Error opening results.txt" << endl;
-    }
-
 
     return 0;
 }

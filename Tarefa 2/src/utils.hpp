@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <cmath>
 #include <chrono>
@@ -95,4 +96,44 @@ void giveThreadsWork(unsigned int N, unsigned int M, unsigned int elements[], un
         cout << "Thread " << i + 1 << " duration: " << duration[i] << " ms" << endl;
     }
 
+}
+
+void createCSV(unsigned int M) {
+    // Open the file (if there is no file, it will be created; if there is a file, it will be erased)
+    ofstream file("results.csv", ios::trunc);
+
+    // Check if the file was opened
+    if (!file.is_open()) {
+        cout << "Error: the file could not be opened" << endl;
+        return;
+    }
+
+    // Create csv header: N, M, approach, totalDuration, iNumPrime, durationPerThread[M]
+    file << "N,M,approach,totalDuration,iNumPrime,";
+    for (unsigned int i = 0; i < M; i++) {
+        file << "duration" << i << ",";
+    }
+
+    // Close the file
+    file.close();
+}
+
+void appendCSV(unsigned int N, unsigned int M, unsigned int elements[], unsigned int threadSize[], bool isPrime[], double duration, char aproach, double durationPerThread[]) {
+    // Open the file (if there is no file, it will be created; if there is a file, it will be erased)
+    ofstream file("results.csv", ios::app);
+
+    // Check if the file was opened
+    if (!file.is_open()) {
+        cout << "Error: the file could not be opened" << endl;
+        return;
+    }
+
+    // Write the results to the file
+    file << N << "," << M << "," << aproach << "," << duration << "," << iNumPrime << ",";
+    for (unsigned int i = 0; i < M; i++) {
+        file << durationPerThread[i] << ",";
+    }
+
+    // Close the file
+    file.close();
 }
