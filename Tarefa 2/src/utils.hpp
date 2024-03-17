@@ -14,16 +14,16 @@ using namespace std;
 extern int iNumPrime;
 mutex mtx;
 
-void printSets(unsigned int N, unsigned int M, unsigned int elements[], unsigned int threadSize[], bool printElements=true) {
+void printSets(long long N, long long M, long long elements[], long long threadSize[], bool printElements=true) {
     
-    unsigned int previousThreads = 0;
+    long long previousThreads = 0;
 
-    for (unsigned int i = 0; i < M; i++) {
+    for (long long i = 0; i < M; i++) {
         // Print the elements of eachs set
         cout << "Set " << i + 1 << " (size " << threadSize[i] << "): ";
 
         if (printElements) {
-            for (unsigned int j = 0; j < threadSize[i]; j++) {
+            for (long long j = 0; j < threadSize[i]; j++) {
                 cout << elements[previousThreads + j] << " ";
             }
         }
@@ -40,10 +40,10 @@ void updateCounter()
     mtx.unlock();
 }
 
-void executeApproach(unsigned int elements[], unsigned int threadSize[], int idxThread, bool isPrime[], double &duration, char aproach) 
+void executeApproach(long long elements[], long long threadSize[], int idxThread, bool isPrime[], double &duration, char method) 
 {
     // Start the clock
-    auto start = chrono::steady_clock::now();
+    auto start = chrono::high_resolution_clock::now();
 
     // Calculate the start and end index for the current thread
     int start_idx = 0;
@@ -57,48 +57,48 @@ void executeApproach(unsigned int elements[], unsigned int threadSize[], int idx
     // Evaluate the elements in the current thread
     for (int i = start_idx; i < end_idx; i++) {
         int operations = 0;
-        if (aproach == 'i') {
+        if (method == 'i') {
             isPrime[i] = is_prime_it(elements[i], operations);
         } 
-        else if (aproach == 'r') {
+        else if (method == 'r') {
             isPrime[i] = is_prime_re(elements[i], operations);
         }
         if (isPrime[i]) updateCounter();
     }
 
     // Stop the clock
-    auto end = chrono::steady_clock::now();
+    auto end = chrono::high_resolution_clock::now();
 
     // Calculate the duration
-    duration = static_cast<double>(chrono::duration_cast<chrono::nanoseconds>(end - start).count()) * 1e-6; // in milliseconds
+    duration = static_cast<double>(chrono::duration_cast<chrono::nanoseconds>(end - start).count()); // in milliseconds
 }
 
 
-void giveThreadsWork(unsigned int N, unsigned int M, unsigned int elements[], unsigned int threadSize[], bool isPrime[], char aproach='i') {
+double giveThreadsWork(long long N, long long M, long long elements[], long long threadSize[], bool isPrime[], char method, double durationPerThread[]) {
+    // Start the clock
+    auto start = chrono::high_resolution_clock::now();
+
     // Create the threads
     thread threads[M];
 
-    // Array to store the duration of each thread
-    double duration[M];
-
     // Give work to each thread
-    for (unsigned int i = 0; i < M; i++) {
-        threads[i] = thread(executeApproach, elements, threadSize, i, ref(isPrime), ref(duration[i]), aproach);
+    for (long long i = 0; i < M; i++) {
+        threads[i] = thread(executeApproach, elements, threadSize, i, ref(isPrime), ref(durationPerThread[i]), method);
     }
 
     // Join the threads
-    for (unsigned int i = 0; i < M; i++) {
+    for (long long i = 0; i < M; i++) {
         threads[i].join();
     }
 
-    // Print the duration of each thread
-    for (unsigned int i = 0; i < M; i++) {
-        cout << "Thread " << i + 1 << " duration: " << duration[i] << " ms" << endl;
-    }
+    // Stop the clock
+    auto end = chrono::high_resolution_clock::now();
 
+    // Calculate the duration and return it
+    return static_cast<double>(chrono::duration_cast<chrono::nanoseconds>(end - start).count()) * 1e-6; // in milliseconds 
 }
 
-void createCSV(unsigned int M) {
+void createCSV(long long M=1) {
     // Open the file (if there is no file, it will be created; if there is a file, it will be erased)
     ofstream file("results.csv", ios::trunc);
 
@@ -108,17 +108,18 @@ void createCSV(unsigned int M) {
         return;
     }
 
-    // Create csv header: N, M, approach, totalDuration, iNumPrime, durationPerThread[M]
-    file << "N,M,approach,totalDuration,iNumPrime,";
-    for (unsigned int i = 0; i < M; i++) {
-        file << "duration" << i << ",";
-    }
+    // Create csv header: M, N, approach, method, totalDuration(ms), numberPrimes, duration1, duration2, ..., durationM
+    file << "M,N,approach,method,totalDuration(ms),numberPrimes,";
+    // for (long long i = 0; i < M; i++) {
+    //     file << "duration" << i << ",";
+    // }
+    file << endl;
 
     // Close the file
     file.close();
 }
 
-void appendCSV(unsigned int N, unsigned int M, unsigned int elements[], unsigned int threadSize[], bool isPrime[], double duration, char aproach, double durationPerThread[]) {
+void appendCSV(long long N, long long M, long long aproach, char method, double durationPerThread[], double durationTotal) {
     // Open the file (if there is no file, it will be created; if there is a file, it will be erased)
     ofstream file("results.csv", ios::app);
 
@@ -129,10 +130,11 @@ void appendCSV(unsigned int N, unsigned int M, unsigned int elements[], unsigned
     }
 
     // Write the results to the file
-    file << N << "," << M << "," << aproach << "," << duration << "," << iNumPrime << ",";
-    for (unsigned int i = 0; i < M; i++) {
-        file << durationPerThread[i] << ",";
-    }
+    file << M << "," << N << "," << aproach << "," << method << "," << durationTotal << "," << iNumPrime << ",";
+    // for (long long i = 0; i < M; i++) {
+    //     file << durationPerThread[i] << ",";
+    // }
+    file << endl;
 
     // Close the file
     file.close();
