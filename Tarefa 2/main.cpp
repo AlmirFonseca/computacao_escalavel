@@ -6,9 +6,9 @@
 #include <random>
 #include <algorithm>
 
-#include "prime.hpp"
-#include "setDistribution.hpp"
-#include "utils.hpp"
+#include "src/prime.hpp"
+#include "src/setDistribution.hpp"
+#include "src/utils.hpp"
 
 using namespace std;
 
@@ -77,4 +77,4 @@ int main() {
 }
 
 // The line to compile and exec
-// g++ -std=c++11 main.cpp prime.hpp setDistribution.hpp utils.hpp -o main; ./main
+// g++ -std=c++11 main.cpp -o main; ./main 
