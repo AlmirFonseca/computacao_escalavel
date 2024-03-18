@@ -6,172 +6,109 @@
 #include <random>
 #include <algorithm>
 #include <fstream>
+#include <cstdlib> // For std::stoi
+
+using namespace std;
 
 #include "src/prime.hpp"
 #include "src/setDistribution.hpp"
 #include "src/utils.hpp"
 
-using namespace std;
+int iNumPrime = 0; // Declare and initialize iNumPrime variable
 
-#define OVERSAMPLING_FACTOR 5
+// Include your function prototypes here
+void CSVmaker(int N, int M, char method, int approach);
 
-int iNumPrime = 0;
-
-void CSV_maker() {
-
-    char methods[2] = {'r', 'i'}; // Methods to evaluate (r for recursive, i for iterative)
-
-    // Create the CSV file
-    createCSV();
-
-    for (int M = 1; M < 11; M++) {
-        // Iterate over the range to evaluate (10^i, i = 1, 2, ...)
-
-        cout << "M = " << M << endl;
-
-        for (int k = 1; k < 5; k++) {
-            long long N = pow(10, k); // Range to evaluate (1 to N)
-
-            cout << "N = " << N << endl;
-
-            // Create the elements and threadSize arrays
-            long long elements[N] = {0}; // Array to store the numbers to evaluate (from 1 to N, by default)
-            long long threadSize[N] = {0}; // Array to store the thread size (number of elements to evaluate in each thread)
-            bool isPrime[N] = {false}; // Array to store the prime numbers
-
-            // Fill the elements array
-            for (long long i = 0; i < N; i++) {
-                elements[i] = i + 1;
-            }
-
-            // Iterate over the indexing approaches
-            for (int approach = 1; approach <= 5; approach++) {
-
-                cout << "Approach " << approach << endl;
-
-                switch (approach) {
-                    case 1: // Split in equal parts, without balance
-                        equalSplit(N, M, elements, threadSize);
-                        break;
-
-                    case 2: // Shuffle and split in equal parts
-                        shuffleAndSplit(N, M, elements, threadSize);
-                        break;
-
-                    case 3: // "Card distribution" approach (round-robin with remaining elements)
-                        cardDistribution(N, M, elements, threadSize);
-                        break;
-
-                    case 4: // Split and shuffle
-                        splitAndShuffle(N, M, elements, threadSize);
-                        break;
-
-                    case 5: // Workload estimation
-                        workloadBalance(N, M, elements, threadSize);
-                        break;
-                    
-                    default:
-                        break;
-                }
-
-                // Iterate over the methods (recursive and iterative)
-                for (char method : methods) {
-
-                    cout << "Method " << method << endl;
-
-                    double durations[OVERSAMPLING_FACTOR] = {0}; // Array to store the duration of each oversampling factor
-
-                    // Iterate over the oversampling factor
-                    for (int i = 1; i <= OVERSAMPLING_FACTOR; i++) {
-                        double durationPerThread[M] = {0}; // Array to store the duration of each thread
-
-                        cout << "Oversampling factor " << i << endl;
-
-                        // Give work to each thread
-                        durations[i-1] = giveThreadsWork(N, M, elements, threadSize, isPrime, method, durationPerThread);
-
-                        // cout << "\nThere are " << iNumPrime << " prime numbers" << endl;
-
-                        for (long long i = 0; i < M; i++) {
-                            threadSize[i] = 0;
-                        }
-                    }
-
-                    // Calculate the average duration
-                    double avgDuration = accumulate(durations, durations + OVERSAMPLING_FACTOR, 0.0) / OVERSAMPLING_FACTOR;
-
-                    appendCSV(N, M, approach, method, 0, avgDuration);
-                }
-
-                // Restart the counter
-                iNumPrime = 0;
-                
-                // Restart the elements and threadSize arrays
-                for (long long i = 0; i < N; i++) {
-                    elements[i] = i + 1;
-                }
-            }
-        }
-    }   
-}
-
-int main() {
-
-    const int NUMTHREADS = 7;
-    long long N = pow(10, 2); // Range to evaluate (1 to N)
-
-    // Create the elements and threadSize arrays
-    long long elements[N] = {0}; // Array to store the numbers to evaluate (from 1 to N, by default)
-    long long threadSize[N] = {0}; // Array to store the thread size (number of elements to evaluate in each thread)
-    bool isPrime[N] = {false}; // Array to store the prime numbers
-
-    // Fill the elements array
-    for (long long i = 0; i < N; i++) {
-        elements[i] = i + 1;
+int main(int argc, char* argv[]) {
+    if (argc < 5) {
+        std::cerr << "Usage: " << argv[0] << " <N> <M> <method> <approach>\n";
+        return 1;
     }
 
-    // Uses the "card distribution" approach to split the elements in 7 (=NUMTHREADS) threads
-    cardDistribution(N, NUMTHREADS, elements, threadSize);
+    int N = std::stoi(argv[1]);
+    int M = std::stoi(argv[2]);
+    char method = argv[3][0];
+    int approach = std::stoi(argv[4]);
 
-    // Print elements of each thread
-    printSets(N, NUMTHREADS, elements, threadSize);
-
-    // Execute the approach with the iterative method
-    char method = 'i';
-    double durationPerThread[NUMTHREADS] = {0}; // Array to store the duration of each thread
-    double duration = giveThreadsWork(N, NUMTHREADS, elements, threadSize, isPrime, method, durationPerThread);
-
-    // Print the duration of each thread
-    for (long long i = 0; i < NUMTHREADS; i++) {
-        cout << "Thread " << i + 1 << " duration: " << durationPerThread[i] << " ns" << endl;
+    // Ensure method is either 'r' or 'i'
+    if (method != 'r' && method != 'i') {
+        std::cerr << "Method must be 'r' for recursive or 'i' for iterative\n";
+        return 1;
     }
 
-    // CSV_maker();
-
-    cout << endl;
-    cout << "Threads: " << NUMTHREADS << endl;
-    cout << "Total execution time (ns): " << duration << endl;
-    cout << "Total numbers evaluated: " << N <<endl;
-    cout << "Quantity of primes found: " << iNumPrime << endl;
-
-    ofstream outputFile("results.txt");
-
-    if (outputFile.is_open()) {
-
-        outputFile << "Primes: ";
-        for (unsigned int i = 0; i < N; i++) {
-            if(isPrime[i] == 1) outputFile << elements[i] << "; ";
-        }
-        cout << endl;
-        outputFile.close();
-    } else {
-        cerr << "Error opening results.txt" << endl;
+    // Ensure approach is within the correct range
+    if (approach < 1 || approach > 5) {
+        std::cerr << "Approach must be between 1 and 5\n";
+        return 1;
     }
 
+    // Now, call the function to perform a single run with the provided parameters
+    CSVmaker(N, M, method, approach);
 
     return 0;
 }
 
-// The line to compile and exec
-// g++ -std=c++11 main.cpp -o main; ./main 
+void CSVmaker(int N, int M, char method, int approach) {
+    // Dynamically allocate arrays to avoid stack overflow
+    auto elements = new unsigned long long int[N];
+    auto threadSize = new unsigned long long int[N]; // Note: This might be better as new unsigned long long int[M] if M is the number of threads
+    auto isPrime = new bool[N];
+    auto durationPerThread = new double[M];
 
+    // Initialize arrays
+    for (int i = 0; i < N; ++i) {
+        elements[i] = i + 1;
+        isPrime[i] = false;
+    }
+    for (unsigned long long int i = 0; i < M; ++i) {
+        threadSize[i] = 0;
+    }
+    for (int i = 0; i < M; ++i) {
+        durationPerThread[i] = 0.0;
+    }
+
+    // Apply the chosen approach to distribute work among threads
+    switch (approach) {
+        case 1:
+            equalSplit(N, M, elements, threadSize);
+            break;
+        case 2:
+            shuffleAndSplit(N, M, elements, threadSize);
+            break;
+        case 3:
+            cardDistribution(N, M, elements, threadSize);
+            break;
+        case 4:
+            splitAndShuffle(N, M, elements, threadSize);
+            break;
+        case 5:
+            workloadBalance(N, M, elements, threadSize);
+            break;
+        default:
+            std::cerr << "Invalid approach: " << approach << std::endl;
+            return;
+    }
+
+    // Perform the work and measure durations
+    double totalDuration = giveThreadsWork(N, M, elements, threadSize, isPrime, durationPerThread, method);
+
+    // Append the results to the CSV file
+    appendCSV(N, M, approach, method, iNumPrime, totalDuration, durationPerThread);
+
+    cout << "Threads: " << M << endl;
+    cout << "Total execution time (ms): " << totalDuration << endl;
+    cout << "Total numbers evaluated: " << N <<endl;
+    cout << "Quantity of primes found: " << iNumPrime << endl;
+    cout << "Primes: ";
+        for (unsigned int i = 0; i < N; i++) {
+            if(isPrime[i] == 1) cout << elements[i] << "; ";
+        }
+        cout << endl;
+    cout << endl;
+
+    // Clean up dynamic allocations
+    delete[] elements;
+    delete[] threadSize;
+    delete[] isPrime;
+    delete[] durationPerThread;
+}
